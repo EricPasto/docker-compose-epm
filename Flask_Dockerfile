@@ -1,0 +1,23 @@
+FROM python:3.11
+
+# Instal·lar paquets necessaris
+RUN apt-get update && apt-get install -y openssh-server && rm -rf /var/lib/apt/lists/*
+
+# Crear directori per l'aplicació
+WORKDIR /app
+
+# Copiar els fitxers de l'aplicació
+COPY . .
+
+# Instal·lar dependències
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Configurar SSH
+RUN mkdir /var/run/sshd
+RUN echo 'root:root' | chpasswd
+RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
+RUN sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config
+EXPOSE 22 5000
+
+# Comand per arrencar SSH i Gunicorn
+CMD service ssh start && gunicorn --bind 0.0.0.0:5000 app:app
