@@ -1,0 +1,50 @@
+version: '3.8'
+
+volumes:
+  dbdata:
+  document_root:
+
+networks:
+  dev:
+    driver: bridge
+
+services:
+  flask:
+    build: ./flask_app
+    container_name: flask_app
+    networks:
+      - dev
+    volumes:
+      - document_root:/var/www/html
+    ports:
+      - "5000:5000"
+      - "2222:22"
+    depends_on:
+      - postgres
+
+  postgres:
+    image: postgres:latest
+    container_name: postgres_db
+    networks:
+      - dev
+    volumes:
+      - dbdata:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: mydatabase
+    ports:
+      - "5432:5432"
+
+  developer:
+    build: ./developer_env
+    container_name: dev_env
+    networks:
+      - dev
+    volumes:
+      - document_root:/home/dev/workspace
+    ports:
+      - "5900:5900"  # VNC Server
+      - "2223:22"     # SSH Server
+    environment:
+      - DISPLAY=:0
